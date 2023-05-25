@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "RelightMobile",
+    "name": "AI照片打光",
     "slug": "RelightMobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -15,7 +15,9 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.jinchan.RelightMobile",
+      "buildNumber": "5"
     },
     "android": {
       "adaptiveIcon": {
@@ -25,6 +27,18 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "sourceExts": [
+      "js",
+      "jsx",
+      "css",
+      "ts",
+      "tsx"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "107c8614-f762-425a-adba-da8397647fec"
+      }
     }
   }
 }
