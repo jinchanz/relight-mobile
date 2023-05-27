@@ -1,21 +1,42 @@
 import React from 'react'
 import { useEffect, useRef } from 'react'
-import { BackHandler, SafeAreaView, StatusBar, StyleSheet, View, Text, Button } from 'react-native'
+import { BackHandler, StatusBar, StyleSheet, View, Text, Button, ActivityIndicator } from 'react-native'
 import { WebView } from 'react-native-webview'
 import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system'
-import { RootSiblingParent } from 'react-native-root-siblings';
-import Toast from 'react-native-root-toast';
+import MyLoader from './loader';
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  error: {
+  loading: {
+    position: 'absolute',
     flex: 1,
-    alignItems:'center', 
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100%',
+    width: '100%',
+  },
+  error: {
+    position: 'absolute',
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100%',
+    width: '100%',
   }
 });
+
+function displaySpinner() {
+  return (
+    <View style={styles.loading}>
+      {/* <ActivityIndicator size="large" /> */}
+      <MyLoader />
+    </View>
+  );
+}
+
 
 export default function App() {
   const webviewRef = useRef<WebView>()
@@ -52,64 +73,59 @@ export default function App() {
     ).catch((e) =>
       console.log('instagram share failed', e)
     )
-    const mediaResult = await MediaLibrary.saveToLibraryAsync(_filename);
-    console.log('mediaResult: ', mediaResult);
-    Toast.show('保存成功', {
-      duration: 2000,
-      position: Toast.positions.CENTER,
-    });
+    await MediaLibrary.saveToLibraryAsync(_filename);
+    webviewRef.current?.injectJavaScript(
+      `window.getMessageComponent ? window.getMessageComponent().success('save image successfully.') : window.alert('save image successfully.')`
+    )
   }
 
   return (
     <View style={styles.container}>
       <WebView
-          ref={webviewRef}
-          allowFileAccess={true}
-          allowFileAccessFromFileURLs={true}
-          allowUniversalAccessFromFileURLs={true}
-          javaScriptEnabled={true}
-          domStorageEnabled={true}
-          mixedContentMode={'always'}
-          originWhitelist={['*']}
-          useWebkit
-          source={{ uri: `https://jinchan.space/relight`}}
-          onError={(e) => {
-            if ([-1100, -1009].includes(e.nativeEvent.code)) {
-              return <Button title="reload" onPress={() => { webviewRef?.current?.reload?.(); }} />
-            } else {
-              return(<View>
-                <Text>Error occurred while loading the page.</Text>
-              </View>);
-            }
-          }}
-          renderError={(errorDomain: string | undefined, errorCode: number, errorDesc: string) => {
-            if ([-1100, -1009].includes(errorCode)) {
-              return <View style={styles.error}>
-                <Text>{errorDesc}</Text>
-                <Button title="reload" onPress={() => { webviewRef?.current?.reload?.(); }} />
-              </View>
-            } else {
-              return(<View style={styles.error}>
-                <Text>Error occurred while loading the page.</Text>
-                <Button title="reload" onPress={() => { webviewRef?.current?.reload?.(); }} />
-              </View>);
-            }
-          }}
-          onMessage={(event) => {
-            const data = JSON.parse(event.nativeEvent.data)
-            if (data.type === 'download') {
-              SaveToPhone(data)
-            }
-          }}
-        ></WebView>
-        <StatusBar hidden />
+        bounces={false}
+        scalesPageToFit={false}
+        startInLoadingState={true}
+        renderLoading={displaySpinner}
+        ref={webviewRef}
+        allowFileAccess={true}
+        allowFileAccessFromFileURLs={true}
+        allowUniversalAccessFromFileURLs={true}
+        javaScriptEnabled={true}
+        domStorageEnabled={true}
+        mixedContentMode={'always'}
+        originWhitelist={['*']}
+        useWebkit
+        source={{ uri: `https://jinchan.space/relight?t=121`}}
+        onError={(e) => {
+          if ([-1100, -1009].includes(e.nativeEvent.code)) {
+            return <Button title="reload" onPress={() => { webviewRef?.current?.reload?.(); }} />
+          } else {
+            return(<View>
+              <Text>Error occurred while loading the page.</Text>
+            </View>);
+          }
+        }}
+        renderError={(errorDomain: string | undefined, errorCode: number, errorDesc: string) => {
+          if ([-1100, -1009].includes(errorCode)) {
+            return <View style={styles.error}>
+              <Text>{errorDesc}</Text>
+              <Button title="reload" onPress={() => { webviewRef?.current?.reload?.(); }} />
+            </View>
+          } else {
+            return(<View style={styles.error}>
+              <Text>Error occurred while loading the page.</Text>
+              <Button title="reload" onPress={() => { webviewRef?.current?.reload?.(); }} />
+            </View>);
+          }
+        }}
+        onMessage={(event) => {
+          const data = JSON.parse(event.nativeEvent.data)
+          if (data.type === 'download') {
+            SaveToPhone(data)
+          }
+        }}
+      ></WebView>
+      <StatusBar hidden />
     </View>
   )
 }
-
-// export default function App() {
-//   return <View style={styles.container}>
-//     <WebView source={{ uri: 'https://jinchan.space/relight' }} style={{ flex: 1 }} /> 
-//     <StatusBar style="auto" />
-//   </View>;
-// }
