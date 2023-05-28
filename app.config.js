@@ -1,4 +1,4 @@
-{
+export default {
   "expo": {
     "name": "AI照片打光",
     "slug": "RelightMobile",
@@ -17,7 +17,10 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.jinchan.RelightMobile",
-      "buildNumber": "6"
+      "buildNumber": "6",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app uses the camera to take photos for relighting."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -39,6 +42,27 @@
       "eas": {
         "projectId": "107c8614-f762-425a-adba-da8397647fec"
       }
-    }
+    },
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/107c8614-f762-425a-adba-da8397647fec"
+    },
+    "plugins": [
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos.",
+          "savePhotosPermission": "Allow $(PRODUCT_NAME) to save photos."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera."
+        }
+      ]
+    ]
   }
-}
+};
