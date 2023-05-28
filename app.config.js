@@ -17,7 +17,7 @@ export default {
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.jinchan.RelightMobile",
-      "buildNumber": "6",
+      "buildNumber": "8",
       "infoPlist": {
         "NSCameraUsageDescription": "This app uses the camera to take photos for relighting."
       }
@@ -63,6 +63,7 @@ export default {
           "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera."
         }
       ]
-    ]
+    ],
+    hotVersion: '1'
   }
 };

@@ -66,6 +66,7 @@ export default function App() {
   Camera.requestCameraPermissionsAsync();
   const webviewRef = useRef<WebView>()
 
+  const [updateFlag, setUpdateFlag] = useState(1);
   const [isNetworkConnected, setIsNetworkConnected] = useState(false);
 
   useEffect(() => {
@@ -74,11 +75,14 @@ export default function App() {
       setIsNetworkConnected(!!state.isConnected);
     }
     checkNetwork();
-  }, []);
+  }, [updateFlag]);
 
   if (!isNetworkConnected) {
-    return <View style={styles.container}>
+    return <View style={styles.error}>
       <Text>Network is not reachable, check the network and try again.</Text>
+      <Button title="Reload" onPress={() => { 
+        setUpdateFlag(updateFlag + 1);
+       }} />
     </View>
   }
 
@@ -145,7 +149,7 @@ export default function App() {
         }
       }>
         <Text style={{ color: '#66666666' }}>
-          { `v${expo?.version}${Platform.OS === 'ios' ? ('-' + expo.ios.buildNumber) : ''}` }
+          { `v${expo?.version}${Platform.OS === 'ios' ? ('-' + expo.ios.buildNumber) : ''}-${expo.hotVersion}` }
         </Text>
       </View>
     </View>
