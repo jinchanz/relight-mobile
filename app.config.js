@@ -64,6 +64,6 @@ export default {
         }
       ]
     ],
-    hotVersion: '1'
+    hotVersion: '2'
   }
 };

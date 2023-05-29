@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useRef } from 'react'
-import { StatusBar, StyleSheet, View, Text, Button, Platform } from 'react-native'
+import { StatusBar, StyleSheet, View, Text, Button, Platform, AppState } from 'react-native'
 import { WebView } from 'react-native-webview'
 import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system'
@@ -37,7 +37,6 @@ const styles = StyleSheet.create({
 function displaySpinner() {
   return (
     <View style={styles.loading}>
-      {/* <ActivityIndicator size="large" /> */}
       <MyLoader />
     </View>
   );
@@ -62,6 +61,9 @@ const SaveToPhone = async ({
   await MediaLibrary.saveToLibraryAsync(_filename);
 }
 
+let backgroundTime;
+let appState = AppState.currentState;
+
 export default function App() {
   Camera.requestCameraPermissionsAsync();
   const webviewRef = useRef<WebView>()
@@ -69,6 +71,25 @@ export default function App() {
   const [updateFlag, setUpdateFlag] = useState(1);
   const [isNetworkConnected, setIsNetworkConnected] = useState(false);
 
+  const handleAppStateChange = (nextAppState) => {
+    if (
+      (appState || '').match(/inactive|background/) &&
+      nextAppState === 'active'
+    ) {
+      // 应用程序从后台恢复到前台，检查运行时间
+      const currentTime = new Date().getTime();
+      if (backgroundTime && (currentTime - backgroundTime) > 2 * 60 * 1000) {
+        // 后台运行时间超过5分钟，重新加载页面
+        // window.location.reload();
+        webviewRef?.current?.reload?.()
+        console.log('reload')
+      }
+    } else {
+      // 应用程序进入后台，记录时间戳
+      backgroundTime = new Date().getTime();
+    }
+    appState = nextAppState
+  };
   useEffect(() => {
     async function checkNetwork() {
       const state = await Network.getNetworkStateAsync();
@@ -76,6 +97,16 @@ export default function App() {
     }
     checkNetwork();
   }, [updateFlag]);
+
+  useEffect(() => {
+    // 添加状态变化监听器
+    const handler = AppState.addEventListener('change', handleAppStateChange);
+
+    return () => {
+      // 清除状态变化监听器
+      handler.remove();
+    };
+  }, []);
 
   if (!isNetworkConnected) {
     return <View style={styles.error}>
