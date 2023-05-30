@@ -19,14 +19,17 @@ export default {
       "bundleIdentifier": "com.jinchan.RelightMobile",
       "buildNumber": "8",
       "infoPlist": {
-        "NSCameraUsageDescription": "This app uses the camera to take photos for relighting."
+        "NSCameraUsageDescription": "This app uses the camera to take photos for relighting.",
+        "NSPhotoLibraryUsageDescription": "This app uses photos from 'PhotoLibrary' for relighting.",
+        "NSPhotoLibraryAddUsageDescription": "This app saves the image after relighting to 'PhotoLibrary'."
       }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      package: 'space.jinchan.relight',
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -53,14 +56,14 @@ export default {
       [
         "expo-media-library",
         {
-          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos.",
-          "savePhotosPermission": "Allow $(PRODUCT_NAME) to save photos."
+          "photosPermission": "This app uses photos from 'PhotoLibrary' for relighting.",
+          "savePhotosPermission": "This app saves the image after relighting to 'PhotoLibrary'."
         }
       ],
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera."
+          "cameraPermission": "This app uses the camera to take photos for relighting."
         }
       ]
     ],

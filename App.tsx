@@ -12,6 +12,8 @@ import { default as appInfo } from './app.config';
 
 const { expo } = appInfo;
 
+const MAX_HOLD_TIME = 5 * 60 * 1000;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -23,6 +25,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: '100%',
     width: '100%',
+    backgroundColor: '#000000cc'
   },
   error: {
     position: 'absolute',
@@ -78,11 +81,11 @@ export default function App() {
     ) {
       // 应用程序从后台恢复到前台，检查运行时间
       const currentTime = new Date().getTime();
-      if (backgroundTime && (currentTime - backgroundTime) > 2 * 60 * 1000) {
+      if (backgroundTime && (currentTime - backgroundTime) > MAX_HOLD_TIME) {
         // 后台运行时间超过5分钟，重新加载页面
-        // window.location.reload();
-        webviewRef?.current?.reload?.()
-        console.log('reload')
+        if (webviewRef?.current) {
+          webviewRef?.current?.reload?.()
+        }
       }
     } else {
       // 应用程序进入后台，记录时间戳
