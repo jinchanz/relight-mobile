@@ -1,22 +1,22 @@
-import React, { useEffect, useState } from 'react'
-import { useRef } from 'react'
-import { StatusBar, StyleSheet, View, Text, Button, Platform, AppState } from 'react-native'
+import React, { useEffect, useState, useRef } from 'react'
+import { StatusBar, StyleSheet, View, Text, Button, Platform, AppState, SafeAreaView } from 'react-native'
 import { WebView } from 'react-native-webview'
 import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system'
 import * as Network from 'expo-network';
-
+import * as SecureStore from 'expo-secure-store';
+import 'react-native-get-random-values';
+import { v4 as uuidv4 } from 'uuid';
+import * as Application from 'expo-application';
 import { Camera } from 'expo-camera';
 import MyLoader from './loader';
-import { default as appInfo } from './app.config';
-
-const { expo } = appInfo;
 
 const MAX_HOLD_TIME = 5 * 60 * 1000;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#171717'
   },
   loading: {
     position: 'absolute',
@@ -41,10 +41,16 @@ function displaySpinner() {
   return (
     <View style={styles.loading}>
       <MyLoader />
+      <StatusBar animated barStyle="light-content"  />
     </View>
   );
 }
 
+async function sleep(second) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, second);
+  });
+}
 
 const SaveToPhone = async ({
   url: data,
@@ -64,13 +70,31 @@ const SaveToPhone = async ({
   await MediaLibrary.saveToLibraryAsync(_filename);
 }
 
+const getDeviceId = async (): Promise<string> => {
+  if (Platform.OS === 'android') {
+    return Application.androidId || uuidv4();
+  } else {
+    let deviceId = await SecureStore.getItemAsync('deviceId');
+
+    if (!deviceId) {
+      deviceId = uuidv4(); //or generate uuid
+      await SecureStore.setItemAsync('deviceId', deviceId as string);
+    }
+    return deviceId as string;
+  }
+}
+
+
 let backgroundTime;
 let appState = AppState.currentState;
+let retryLimit = 60;
+let retryCount = 0;
 
 export default function App() {
   Camera.requestCameraPermissionsAsync();
   const webviewRef = useRef<WebView>()
 
+  const [deviceId, setDeviceId] = useState<string>();
   const [updateFlag, setUpdateFlag] = useState(1);
   const [isNetworkConnected, setIsNetworkConnected] = useState(false);
 
@@ -95,7 +119,14 @@ export default function App() {
   };
   useEffect(() => {
     async function checkNetwork() {
-      const state = await Network.getNetworkStateAsync();
+      let state = await Network.getNetworkStateAsync();
+
+      while (!state.isConnected && retryCount < retryLimit) {
+        retryCount++;
+        await sleep(1000);
+        state = await Network.getNetworkStateAsync();
+      }
+
       setIsNetworkConnected(!!state.isConnected);
     }
     checkNetwork();
@@ -111,7 +142,16 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    getDeviceId().then(setDeviceId)
+  }, []);
+
   if (!isNetworkConnected) {
+
+    if (retryCount < retryLimit) {
+      return displaySpinner();
+    }
+
     return <View style={styles.error}>
       <Text>Network is not reachable, check the network and try again.</Text>
       <Button title="Reload" onPress={() => { 
@@ -121,10 +161,10 @@ export default function App() {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {
         Platform.OS === "web" 
-          ? <iframe ref={webviewRef} style={{border: 0, padding: 0, margin: 0}} src="https://jinchan.space/relight" height={'100%'} width={'100%'} />
+          ? <iframe ref={webviewRef} style={{border: 0, padding: 0, margin: 0}} src={`https://jinchan.space/relight${deviceId}`} height={'100%'} width={'100%'} />
           : <WebView
               bounces={false}
               scalesPageToFit={false}
@@ -139,7 +179,7 @@ export default function App() {
               mixedContentMode={'always'}
               originWhitelist={['*']}
               useWebkit
-              source={{ uri: `https://jinchan.space/relight`}}
+              source={{ uri: `https://jinchan.space/relight?deviceId=${deviceId}`}}
               onError={(e) => {
                 if ([-1100, -1009].includes(e.nativeEvent.code)) {
                   return <Button title="reload" onPress={() => { webviewRef?.current?.reload?.(); }} />
@@ -173,19 +213,7 @@ export default function App() {
               }}
             />
       }
-      <StatusBar hidden />
-      <View style={
-        {
-          position: 'absolute',
-          alignItems: 'center',
-          width: '100%',
-          bottom: 12,
-        }
-      }>
-        <Text style={{ color: '#66666666' }}>
-          { `v${expo?.version}${Platform.OS === 'ios' ? ('-' + expo.ios.buildNumber) : ''}-${expo.hotVersion}` }
-        </Text>
-      </View>
-    </View>
+      <StatusBar animated barStyle="light-content"  />
+    </SafeAreaView>
   )
 }
